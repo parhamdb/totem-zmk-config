@@ -1,0 +1,67 @@
+/*
+ * Test Configuration: Single Key Matrix
+ * Purpose: Find one working row/column pin combination
+ *
+ * Usage:
+ * 1. Update row_pin and col_pin values below
+ * 2. Flash firmware
+ * 3. Press different keys on the keyboard
+ * 4. Monitor logs for any activity
+ * 5. If successful, note which physical key triggered it
+ *
+ * Systematic test combinations:
+ * Row pins to test: 0, 1, 2, 3
+ * Col pins to test: 4, 5, 6, 7, 8, 9, 10
+ *
+ * Total combinations: 4 × 7 = 28 tests
+ */
+
+#include <dt-bindings/zmk/matrix_transform.h>
+
+/ {
+    chosen {
+        zmk,kscan = &kscan0;
+        zmk,matrix_transform = &default_transform;
+    };
+
+    default_transform: keymap_transform_0 {
+        compatible = "zmk,matrix-transform";
+        columns = <1>;
+        rows = <1>;
+        map = <RC(0,0)>;
+    };
+
+    kscan0: kscan_0 {
+        compatible = "zmk,kscan-gpio-matrix";
+        label = "KSCAN";
+
+        diode-direction = "col2row";
+
+        // TEST CONFIGURATION - Modify these values
+        row-gpios = <&xiao_d 0 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>;
+        col-gpios = <&xiao_d 4 GPIO_ACTIVE_HIGH>;
+    };
+};
+
+/*
+ * TESTING MATRIX:
+ *
+ * Test  Row  Col  Notes
+ * ----  ---  ---  -----
+ * 1     0    4
+ * 2     0    5
+ * 3     0    6
+ * 4     0    7
+ * 5     0    8
+ * 6     0    9
+ * 7     0    10
+ * 8     1    4
+ * 9     1    5
+ * ... continue through all combinations
+ *
+ * When you find a working combination, note:
+ * - Which row pin worked
+ * - Which col pin worked
+ * - Which physical key on the board triggered it
+ * - Which position (row/col) that key should be in the layout
+ */

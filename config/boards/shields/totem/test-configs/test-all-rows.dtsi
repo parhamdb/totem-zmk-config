@@ -1,0 +1,72 @@
+/*
+ * Test Configuration: All Rows, Single Column
+ * Purpose: Map all row pins after finding one working column
+ *
+ * Prerequisites:
+ * - You must have found at least one working column pin from test-single-key.dtsi
+ *
+ * Usage:
+ * 1. Replace COL_PIN with your known working column pin
+ * 2. Flash firmware
+ * 3. Press keys in that column (one from each row)
+ * 4. Note which physical keys map to rows 0, 1, 2, 3
+ * 5. Document the physical row order
+ */
+
+#include <dt-bindings/zmk/matrix_transform.h>
+
+/ {
+    chosen {
+        zmk,kscan = &kscan0;
+        zmk,matrix_transform = &default_transform;
+    };
+
+    default_transform: keymap_transform_0 {
+        compatible = "zmk,matrix-transform";
+        columns = <1>;
+        rows = <4>;
+        // Single column with 4 keys
+        map = <
+            RC(0,0)
+            RC(1,0)
+            RC(2,0)
+            RC(3,0)
+        >;
+    };
+
+    kscan0: kscan_0 {
+        compatible = "zmk,kscan-gpio-matrix";
+        label = "KSCAN";
+
+        diode-direction = "col2row";
+
+        // All 4 row pins
+        row-gpios
+            = <&xiao_d 0 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&xiao_d 1 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&xiao_d 2 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            , <&xiao_d 3 (GPIO_ACTIVE_HIGH | GPIO_PULL_DOWN)>
+            ;
+
+        // REPLACE 4 with your working column pin number
+        col-gpios = <&xiao_d 4 GPIO_ACTIVE_HIGH>;
+    };
+};
+
+/*
+ * TESTING NOTES:
+ *
+ * Physical Key → Matrix Position Mapping:
+ *
+ * Press each key in the working column and note which row number it produces:
+ *
+ * Physical Key Location    Matrix Position    Row Pin
+ * -----------------------  -----------------  --------
+ * Top key in column        RC(?,0)            xiao_d ?
+ * Second key               RC(?,0)            xiao_d ?
+ * Third key                RC(?,0)            xiao_d ?
+ * Bottom key               RC(?,0)            xiao_d ?
+ *
+ * If the mapping doesn't match physical layout (e.g., top key = row 2),
+ * you may need to reorder the row-gpios to match the physical layout.
+ */
