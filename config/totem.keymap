@@ -1,0 +1,347 @@
+/*
+ * TOTEM Keyboard - Miryoku Layout with Mouse Support
+ *
+ * Features:
+ * - Timeless home row mods (urob style)
+ * - Full Miryoku layer structure
+ * - Mouse keys with movement and scrolling
+ * - Caps Word support
+ *
+ * Layout: 38 keys (3x5 + 4 per side = 10 + 4 = 14 per side, but TOTEM is 3x5+3+1)
+ *
+ * ╭──────────────────────────────────────────╮   ╭──────────────────────────────────────────╮
+ * │  0   1   2   3   4                       │   │                       5   6   7   8   9 │
+ * │ 10  11  12  13  14                       │   │                      15  16  17  18  19 │
+ * │ 20  21  22  23  24  25                   │   │                  26  27  28  29  30  31 │
+ * ╰─────────────────────╮ 32  33  34         │   │        35  36  37 ╭─────────────────────╯
+ *                       ╰────────────────────╯   ╰────────────────────╯
+ */
+
+#include <behaviors.dtsi>
+#include <dt-bindings/zmk/keys.h>
+#include <dt-bindings/zmk/bt.h>
+#include <dt-bindings/zmk/outputs.h>
+
+/* Mouse support */
+#include <dt-bindings/zmk/pointing.h>
+
+/* ╔══════════════════════════════════════════════════════════════════════════════╗
+   ║                              LAYER DEFINITIONS                               ║
+   ╚══════════════════════════════════════════════════════════════════════════════╝ */
+
+#define BASE    0
+#define NAV     1
+#define MOUSE   2
+#define MEDIA   3
+#define NUM     4
+#define SYM     5
+#define FUN     6
+
+/* ╔══════════════════════════════════════════════════════════════════════════════╗
+   ║                           KEY POSITION GROUPS                                ║
+   ╚══════════════════════════════════════════════════════════════════════════════╝ */
+
+/* Key positions for positional hold-tap (home row mods) */
+#define KEYS_L 0 1 2 3 4 10 11 12 13 14 20 21 22 23 24 25    /* Left hand keys */
+#define KEYS_R 5 6 7 8 9 15 16 17 18 19 26 27 28 29 30 31    /* Right hand keys */
+#define THUMBS 32 33 34 35 36 37                              /* Thumb keys */
+
+/* ╔══════════════════════════════════════════════════════════════════════════════╗
+   ║                           BEHAVIOR CONFIGURATION                             ║
+   ╚══════════════════════════════════════════════════════════════════════════════╝ */
+
+/* Timing settings for home row mods */
+#define QUICK_TAP_MS 175
+#define TAPPING_TERM_MS 280
+#define PRIOR_IDLE_MS 150
+
+/* Mouse movement speed */
+#define ZMK_POINTING_DEFAULT_MOVE_VAL 1200
+#define ZMK_POINTING_DEFAULT_SCRL_VAL 20
+
+&caps_word {
+    continue-list = <UNDERSCORE MINUS BACKSPACE DELETE>;
+};
+
+&sk {
+    release-after-ms = <2000>;
+    quick-release;
+};
+
+&sl {
+    release-after-ms = <2000>;
+};
+
+/ {
+    /* ══════════════════════════════════════════════════════════════════════════
+       BEHAVIORS - Timeless Home Row Mods
+       ══════════════════════════════════════════════════════════════════════════ */
+
+    behaviors {
+        /* Home row mod - Left hand */
+        hml: home_row_mod_left {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <TAPPING_TERM_MS>;
+            quick-tap-ms = <QUICK_TAP_MS>;
+            require-prior-idle-ms = <PRIOR_IDLE_MS>;
+            bindings = <&kp>, <&kp>;
+            hold-trigger-key-positions = <KEYS_R THUMBS>;
+            hold-trigger-on-release;
+        };
+
+        /* Home row mod - Right hand */
+        hmr: home_row_mod_right {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <TAPPING_TERM_MS>;
+            quick-tap-ms = <QUICK_TAP_MS>;
+            require-prior-idle-ms = <PRIOR_IDLE_MS>;
+            bindings = <&kp>, <&kp>;
+            hold-trigger-key-positions = <KEYS_L THUMBS>;
+            hold-trigger-on-release;
+        };
+
+        /* Layer-tap with quick tap */
+        ltq: layer_tap_quick {
+            compatible = "zmk,behavior-hold-tap";
+            #binding-cells = <2>;
+            flavor = "balanced";
+            tapping-term-ms = <200>;
+            quick-tap-ms = <QUICK_TAP_MS>;
+            bindings = <&mo>, <&kp>;
+        };
+    };
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       COMBOS
+       ══════════════════════════════════════════════════════════════════════════ */
+
+    combos {
+        compatible = "zmk,combos";
+
+        /* Caps Word - Both home row index fingers */
+        combo_caps_word {
+            timeout-ms = <50>;
+            key-positions = <13 16>;  /* F + J positions */
+            bindings = <&caps_word>;
+            layers = <BASE>;
+        };
+
+        /* Escape - Top left two keys */
+        combo_esc {
+            timeout-ms = <50>;
+            key-positions = <0 1>;
+            bindings = <&kp ESC>;
+            layers = <BASE NAV NUM SYM>;
+        };
+    };
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       CONDITIONAL LAYERS - Tri-layer (NUM + SYM = FUN)
+       ══════════════════════════════════════════════════════════════════════════ */
+
+    conditional_layers {
+        compatible = "zmk,conditional-layers";
+
+        tri_layer {
+            if-layers = <NUM SYM>;
+            then-layer = <FUN>;
+        };
+    };
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       KEYMAP
+       ══════════════════════════════════════════════════════════════════════════ */
+
+    keymap {
+        compatible = "zmk,keymap";
+
+        /* ──────────────────────────────────────────────────────────────────────
+           BASE LAYER - QWERTY with Home Row Mods
+           ──────────────────────────────────────────────────────────────────────
+
+           ╭─────────────────────────────────────────╮   ╭─────────────────────────────────────────╮
+           │   Q     W     E     R     T             │   │             Y     U     I     O     P   │
+           │   A     S     D     F     G             │   │             H     J     K     L     '   │
+           │   Z     X     C     V     B    [        │   │        ]    N     M     ,     .     /   │
+           ╰───────────────────╮ ESC  SPC   TAB      │   │      ENT  BSPC  DEL  ╭───────────────────╯
+                               ╰─────────────────────╯   ╰─────────────────────╯
+
+           Home Row Mods: A=GUI, S=ALT, D=CTRL, F=SHIFT | J=SHIFT, K=CTRL, L=ALT, '=GUI
+           Thumb Layers:  ESC/MEDIA, SPC/NAV, TAB/MOUSE | ENT/SYM, BSPC/NUM, DEL/FUN
+        */
+        base_layer {
+            display-name = "Base";
+            bindings = <
+        // ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮                                           ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+             &kp Q         &kp W         &kp E         &kp R         &kp T                                                     &kp Y         &kp U         &kp I         &kp O         &kp P
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤                                           ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &hml LGUI A   &hml LALT S   &hml LCTRL D  &hml LSHFT F  &kp G                                                     &kp H         &hmr RSHFT J  &hmr RCTRL K  &hmr RALT L   &hmr RGUI SQT
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮               ╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &kp Z         &kp X         &kp C         &kp V         &kp B         &kp LBKT                      &kp RBKT      &kp N         &kp M         &kp COMMA     &kp DOT       &kp FSLH
+        // ╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤               ├─────────────┼─────────────┼─────────────┼─────────────┴─────────────┴─────────────╯
+                                                       &ltq MEDIA ESC &ltq NAV SPACE &ltq MOUSE TAB             &ltq SYM RET  &ltq NUM BSPC &ltq FUN DEL
+        //                                           ╰─────────────┴─────────────┴─────────────╯               ╰─────────────┴─────────────┴─────────────╯
+            >;
+        };
+
+        /* ──────────────────────────────────────────────────────────────────────
+           NAV LAYER - Navigation (Right Hand)
+           ──────────────────────────────────────────────────────────────────────
+
+           ╭─────────────────────────────────────────╮   ╭─────────────────────────────────────────╮
+           │ BOOT  XXXXX XXXXX XXXXX XXXXX           │   │           REDO PASTE COPY  CUT  UNDO    │
+           │ GUI   ALT   CTRL  SHIFT XXXXX           │   │           CAPS LEFT  DOWN  UP   RIGHT   │
+           │ XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX     │   │   XXXXX   INS  HOME  PGDN  PGUP END     │
+           ╰───────────────────╮ XXXXX XXXXX XXXXX   │   │   ENT  BSPC  DEL  ╭───────────────────╯
+                               ╰─────────────────────╯   ╰─────────────────────╯
+        */
+        nav_layer {
+            display-name = "Nav";
+            bindings = <
+        // ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮                                           ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+             &bootloader   &none         &none         &none         &none                                                     &kp K_REDO    &kp K_PASTE   &kp K_COPY    &kp K_CUT     &kp K_UNDO
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤                                           ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &kp LGUI      &kp LALT      &kp LCTRL     &kp LSHFT     &none                                                     &caps_word    &kp LEFT      &kp DOWN      &kp UP        &kp RIGHT
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮               ╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &none         &none         &none         &none         &none         &none                         &none         &kp INS       &kp HOME      &kp PG_DN     &kp PG_UP     &kp END
+        // ╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤               ├─────────────┼─────────────┼─────────────┼─────────────┴─────────────┴─────────────╯
+                                                       &none         &none         &none                         &kp RET       &kp BSPC      &kp DEL
+        //                                           ╰─────────────┴─────────────┴─────────────╯               ╰─────────────┴─────────────┴─────────────╯
+            >;
+        };
+
+        /* ──────────────────────────────────────────────────────────────────────
+           MOUSE LAYER - Mouse Keys (Right Hand)
+           ──────────────────────────────────────────────────────────────────────
+
+           ╭─────────────────────────────────────────╮   ╭─────────────────────────────────────────╮
+           │ BOOT  XXXXX XXXXX XXXXX XXXXX           │   │           REDO PASTE COPY  CUT  UNDO    │
+           │ GUI   ALT   CTRL  SHIFT XXXXX           │   │           XXXXX M_LT M_DN M_UP  M_RT    │
+           │ XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX     │   │   XXXXX   XXXXX SC_L SC_D SC_U  SC_R    │
+           ╰───────────────────╮ XXXXX XXXXX XXXXX   │   │   RCLK  LCLK  MCLK  ╭───────────────────╯
+                               ╰─────────────────────╯   ╰─────────────────────╯
+        */
+        mouse_layer {
+            display-name = "Mouse";
+            bindings = <
+        // ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮                                           ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+             &bootloader   &none         &none         &none         &none                                                     &kp K_REDO    &kp K_PASTE   &kp K_COPY    &kp K_CUT     &kp K_UNDO
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤                                           ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &kp LGUI      &kp LALT      &kp LCTRL     &kp LSHFT     &none                                                     &none         &mmv MOVE_LEFT &mmv MOVE_DOWN &mmv MOVE_UP &mmv MOVE_RIGHT
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮               ╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &none         &none         &none         &none         &none         &none                         &none         &none         &msc SCRL_LEFT &msc SCRL_DOWN &msc SCRL_UP &msc SCRL_RIGHT
+        // ╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤               ├─────────────┼─────────────┼─────────────┼─────────────┴─────────────┴─────────────╯
+                                                       &none         &none         &none                         &mkp RCLK     &mkp LCLK     &mkp MCLK
+        //                                           ╰─────────────┴─────────────┴─────────────╯               ╰─────────────┴─────────────┴─────────────╯
+            >;
+        };
+
+        /* ──────────────────────────────────────────────────────────────────────
+           MEDIA LAYER - Media Controls (Right Hand)
+           ──────────────────────────────────────────────────────────────────────
+
+           ╭─────────────────────────────────────────╮   ╭─────────────────────────────────────────╮
+           │ BOOT  XXXXX XXXXX XXXXX XXXXX           │   │           XXXXX XXXXX XXXXX XXXXX BT_CLR│
+           │ GUI   ALT   CTRL  SHIFT XXXXX           │   │           XXXXX PREV  VOLDN VOLUP NEXT  │
+           │ XXXXX XXXXX XXXXX XXXXX XXXXX XXXXX     │   │   XXXXX   BT0   BT1   BT2   BT3   BT4   │
+           ╰───────────────────╮ XXXXX XXXXX XXXXX   │   │   STOP  PLAY  MUTE  ╭───────────────────╯
+                               ╰─────────────────────╯   ╰─────────────────────╯
+        */
+        media_layer {
+            display-name = "Media";
+            bindings = <
+        // ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮                                           ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+             &bootloader   &none         &none         &none         &none                                                     &none         &none         &none         &none         &bt BT_CLR
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤                                           ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &kp LGUI      &kp LALT      &kp LCTRL     &kp LSHFT     &none                                                     &none         &kp C_PREV    &kp C_VOL_DN  &kp C_VOL_UP  &kp C_NEXT
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮               ╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &none         &none         &none         &none         &none         &none                         &none         &bt BT_SEL 0  &bt BT_SEL 1  &bt BT_SEL 2  &bt BT_SEL 3  &bt BT_SEL 4
+        // ╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤               ├─────────────┼─────────────┼─────────────┼─────────────┴─────────────┴─────────────╯
+                                                       &none         &none         &none                         &kp C_STOP    &kp C_PP      &kp C_MUTE
+        //                                           ╰─────────────┴─────────────┴─────────────╯               ╰─────────────┴─────────────┴─────────────╯
+            >;
+        };
+
+        /* ──────────────────────────────────────────────────────────────────────
+           NUM LAYER - Numbers (Left Hand)
+           ──────────────────────────────────────────────────────────────────────
+
+           ╭─────────────────────────────────────────╮   ╭─────────────────────────────────────────╮
+           │   [     7     8     9     ]             │   │             XXXXX XXXXX XXXXX XXXXX BOOT│
+           │   ;     4     5     6     =             │   │             XXXXX SHIFT CTRL  ALT   GUI │
+           │   `     1     2     3     \    XXXXX    │   │   XXXXX   XXXXX XXXXX XXXXX XXXXX XXXXX │
+           ╰───────────────────╮  .    0     -       │   │    XXXXX XXXXX XXXXX ╭───────────────────╯
+                               ╰─────────────────────╯   ╰─────────────────────╯
+        */
+        num_layer {
+            display-name = "Num";
+            bindings = <
+        // ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮                                           ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+             &kp LBKT      &kp N7        &kp N8        &kp N9        &kp RBKT                                                  &none         &none         &none         &none         &bootloader
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤                                           ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &kp SEMI      &kp N4        &kp N5        &kp N6        &kp EQUAL                                                 &none         &kp RSHFT     &kp RCTRL     &kp RALT      &kp RGUI
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮               ╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &kp GRAVE     &kp N1        &kp N2        &kp N3        &kp BSLH      &none                         &none         &none         &none         &none         &none         &none
+        // ╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤               ├─────────────┼─────────────┼─────────────┼─────────────┴─────────────┴─────────────╯
+                                                       &kp DOT       &kp N0        &kp MINUS                     &none         &none         &none
+        //                                           ╰─────────────┴─────────────┴─────────────╯               ╰─────────────┴─────────────┴─────────────╯
+            >;
+        };
+
+        /* ──────────────────────────────────────────────────────────────────────
+           SYM LAYER - Symbols (Left Hand)
+           ──────────────────────────────────────────────────────────────────────
+
+           ╭─────────────────────────────────────────╮   ╭─────────────────────────────────────────╮
+           │   {     &     *     (     }             │   │             XXXXX XXXXX XXXXX XXXXX BOOT│
+           │   :     $     %     ^     +             │   │             XXXXX SHIFT CTRL  ALT   GUI │
+           │   ~     !     @     #     |    XXXXX    │   │   XXXXX   XXXXX XXXXX XXXXX XXXXX XXXXX │
+           ╰───────────────────╮  (     )     _      │   │    XXXXX XXXXX XXXXX ╭───────────────────╯
+                               ╰─────────────────────╯   ╰─────────────────────╯
+        */
+        sym_layer {
+            display-name = "Sym";
+            bindings = <
+        // ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮                                           ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+             &kp LBRC      &kp AMPS      &kp ASTRK     &kp LPAR      &kp RBRC                                                  &none         &none         &none         &none         &bootloader
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤                                           ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &kp COLON     &kp DLLR      &kp PRCNT     &kp CARET     &kp PLUS                                                  &none         &kp RSHFT     &kp RCTRL     &kp RALT      &kp RGUI
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮               ╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &kp TILDE     &kp EXCL      &kp AT        &kp HASH      &kp PIPE      &none                         &none         &none         &none         &none         &none         &none
+        // ╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤               ├─────────────┼─────────────┼─────────────┼─────────────┴─────────────┴─────────────╯
+                                                       &kp LPAR      &kp RPAR      &kp UNDER                     &none         &none         &none
+        //                                           ╰─────────────┴─────────────┴─────────────╯               ╰─────────────┴─────────────┴─────────────╯
+            >;
+        };
+
+        /* ──────────────────────────────────────────────────────────────────────
+           FUN LAYER - Function Keys (Left Hand)
+           ──────────────────────────────────────────────────────────────────────
+
+           ╭─────────────────────────────────────────╮   ╭─────────────────────────────────────────╮
+           │  F12    F7    F8    F9   PSCR           │   │             XXXXX XXXXX XXXXX XXXXX BOOT│
+           │  F11    F4    F5    F6   SLCK           │   │             XXXXX SHIFT CTRL  ALT   GUI │
+           │  F10    F1    F2    F3   PAUSE XXXXX    │   │   XXXXX   XXXXX XXXXX XXXXX XXXXX XXXXX │
+           ╰───────────────────╮ APP  SPC   TAB      │   │    XXXXX XXXXX XXXXX ╭───────────────────╯
+                               ╰─────────────────────╯   ╰─────────────────────╯
+        */
+        fun_layer {
+            display-name = "Fun";
+            bindings = <
+        // ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮                                           ╭─────────────┬─────────────┬─────────────┬─────────────┬─────────────╮
+             &kp F12       &kp F7        &kp F8        &kp F9        &kp PSCRN                                                 &none         &none         &none         &none         &bootloader
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤                                           ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &kp F11       &kp F4        &kp F5        &kp F6        &kp SLCK                                                  &none         &kp RSHFT     &kp RCTRL     &kp RALT      &kp RGUI
+        // ├─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────╮               ╭─────────────┼─────────────┼─────────────┼─────────────┼─────────────┼─────────────┤
+             &kp F10       &kp F1        &kp F2        &kp F3        &kp PAUSE_BREAK &none                       &none         &none         &none         &none         &none         &none
+        // ╰─────────────┴─────────────┴─────────────┼─────────────┼─────────────┼─────────────┤               ├─────────────┼─────────────┼─────────────┼─────────────┴─────────────┴─────────────╯
+                                                       &kp K_APP     &kp SPACE     &kp TAB                       &none         &none         &none
+        //                                           ╰─────────────┴─────────────┴─────────────╯               ╰─────────────┴─────────────┴─────────────╯
+            >;
+        };
+    };
+};
